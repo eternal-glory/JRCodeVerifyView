@@ -24,6 +24,8 @@ class JRCodeVerifyView: UIView {
     
     var joiningTogetherSuccessfully: ((_ offsetX: CGFloat)->())?
     
+    private var gradientLayer: CAGradientLayer = .init()
+    
     private var randomPoint: CGPoint = .zero
     
     private var config: JRCodeVerifyConfig?
@@ -62,11 +64,9 @@ class JRCodeVerifyView: UIView {
     
     private lazy var slider: JRSlider = {
         let _slider = JRSlider(frame: .init(x: margin, y: backgroundImageView.frame.maxY + margin, width: tipLabel.frame.width, height: 30))
-//        _slider.layer.masksToBounds = true
-//        _slider.layer.cornerRadius = 15
         _slider.minimumTrackTintColor = .clear
         _slider.maximumTrackTintColor = .clear
-        _slider.thumbTintColor = .gray
+        _slider.setThumbImage(UIImage(named: "right_arrow"), for: .normal)
         _slider.addTarget(self, action: #selector(slideAction(_:_:)), for: .allTouchEvents)
         return _slider
     }()
@@ -150,8 +150,6 @@ extension JRCodeVerifyView {
             }
             changeSlider(to: CGFloat(slider.value))
         }
-        
-        slider.minimumTrackTintColor = .red
     }
     
     private func successShow(_ offsetX: CGFloat) {
@@ -168,6 +166,17 @@ extension JRCodeVerifyView {
         let x = value * backgroundImageView.frame.width - value * codeSize
         rect.origin.x = x
         clipImageView.frame = rect
+        var size = slider.titleLabel.frame.size
+        size.width = value * slider.titleLabel.frame.width
+        
+        gradientLayer.removeFromSuperlayer()
+        
+        gradientLayer = CAGradientLayer()
+        gradientLayer.colors = [UIColor.red.cgColor, UIColor.orange.cgColor]
+        gradientLayer.startPoint = .zero
+        gradientLayer.endPoint = .init(x: 1.0, y: 0)
+        gradientLayer.frame = .init(origin: .zero, size: size)
+        slider.layer.insertSublayer(gradientLayer, at: 0)
     }
     
     private func addClipImage() {
@@ -341,7 +350,7 @@ extension UIImage {
     ///   - path: <#path description#>
     ///   - mode: <#mode description#>
     /// - Returns: <#description#>
-    func wh_clipImage(path: UIBezierPath, mode: JRContentMode) -> UIImage {
+    func wh_clipImage(path: UIBezierPath, mode: JRContentMode = .fill) -> UIImage {
         let originScale = size.width * 1.0 / size.height
         let boxBounds = path.bounds
         var width = boxBounds.width
